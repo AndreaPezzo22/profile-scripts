@@ -18,17 +18,17 @@ def get_gpu_specs():
           -  Instruction Intensity
     """
     
-    cmd = ["nvidia-smi", "--query-gpu=name,count.multiprocessors,clocks.max.graphics,compute_cap", "--format=csv,noheader,nounits"]
+    cmd = ["nvidia-smi", "--query-gpu=name,clocks.max.graphics,compute_cap", "--format=csv,noheader,nounits"]
     out = subprocess.check_output(cmd).decode("utf-8").strip().split(',')
     
-    if len(out) < 4:
+    if len(out) < 3:
         print(f"\nOutput of the arch query gone wrong -> {out}")
         return None
     else:
         gpu_name = out[0].strip() 
-        sm_count = int(out[1])      # es: 108
-        clock_mhz = int(out[2])     # es: 1410
-        cc = float(out[3])
+        sm_count = int(108)      # es: 108
+        clock_mhz = int(out[1])     # es: 1410
+        cc = float(out[2])
 
     arch_list = architectures.arch_map
     

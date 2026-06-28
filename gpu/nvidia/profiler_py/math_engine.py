@@ -1,4 +1,7 @@
 import pandas as pd
+import warnings
+
+warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 def fp32_roofline(df):
 
