@@ -12,7 +12,11 @@ def fp32_roofline(df):
         #  FMA is doubled because it performs both sum and mul
         2 * df['sm__sass_thread_inst_executed_op_ffma_pred_on.sum'] +
         df['sm__sass_thread_inst_executed_op_fmul_pred_on.sum'] +
-        df['sm__sass_thread_inst_executed_op_fadd_pred_on.sum']
+        df['sm__sass_thread_inst_executed_op_fadd_pred_on.sum'] +
+        2 * df['sm__sass_thread_inst_executed_op_hfma_pred_on.sum'] +
+        df['sm__sass_thread_inst_executed_op_hmul_pred_on.sum'] +
+        df['sm__sass_thread_inst_executed_op_hadd_pred_on.sum'] +
+	512 * df["sm__inst_executed_pipe_tensor.sum"]
     )                
 
     df['Performance_GFLOP_s'] = df['fp32_flops'] / (df['elapsed_s']*1e9)
@@ -28,6 +32,8 @@ def fp32_roofline(df):
         'L2 Arithmetic Intensity (FLOP/B)': df['AI_L2'].mean(),
         'HBM Arithmetic Intensity (FLOP/B)': df['AI_HBM'].mean()
     }
+
+    print(f"The values for fp32 are: {avg_result}")
 
     return avg_result
 

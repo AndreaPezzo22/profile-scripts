@@ -8,6 +8,7 @@ matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 
+
 def get_gpu_specs():
 
     """
@@ -49,46 +50,90 @@ def get_gpu_specs():
     # Shared Mem Peak
     max_transactions_per_sec = shared_bw_gbps / 32
 
+    bw_l2 = 5373.0
+    bw_l1 = 15161.8
+
     return {
         "gpu_name": gpu_name,
         "peak_fp32": peak_gflops_fp32,
         "peak_fp64": peak_gflops_fp64,
         "bandwidth": specs["bw"],
+        "bw_l2": bw_l2,                      
+        "bw_l1": bw_l1,
         "sm_count": sm_count,
         "clock_mhz": clock_mhz,
         "peak_gips": peak_gips,              
         "shared_bw": shared_bw_gbps,        
         "trans_bw": max_transactions_per_sec
-    }
+   }
 
 def fp32_roofline_plot(results, specs):
     print("Generating the FP32 plot")
-
-    arch_values = specs
-
-    # Theoretical values
-    peak = arch_values["peak_fp32"]
-    bw = arch_values["bandwidth"]
-
-    plt.figure(figsize=(10, 6))
-    plt.xscale('log'); plt.yscale('log')
     
-    x_roof = np.logspace(-2, 3, 100)
-    y_roof = np.minimum(peak, x_roof * bw)
-    plt.plot(x_roof, y_roof, color='black', label="Hardware Limit")
+    peak = specs["peak_fp32"]
+    bw_dict = {
+        'L1': specs["bw_l1"],
+        'L2': specs["bw_l2"],
+        'HBM': specs["bandwidth"]
+    }
+   
+    fig, ax = plt.subplots(figsize=(10, 8))
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    
+    ax.set_xlim(1e-2, 2e2)
+    ax.set_ylim(0.1, 1e5) 
+
+    x_vals = np.logspace(-3, 3, 500)
+    ax.axhline(peak, color='black', linewidth=1.2)
+    ax.text(1e1, peak * 1.1, f"Theoretical peak FP32: {peak:.1f} GFLOP/s", ha='center')
+
+    colors = {'L1': '#D49A2A', 'L2': '#2A9D8F', 'HBM': '#6D4C41'}
+    markers = {'L1': 'o', 'L2': '^', 'HBM': 's'}
+
+    for mem_level, bw in bw_dict.items():
+        color = colors.get(mem_level, 'blue')
+        y_vals = x_vals * bw
+        
+        valid_idx = y_vals <= peak
+        ax.plot(x_vals[valid_idx], y_vals[valid_idx], color=color, linewidth=1.2)
+        
+        ridge_x = peak / bw
+        label_x = ridge_x / 3
+        label_y = label_x * bw
+        ax.text(label_x, label_y * 1.1, f"{mem_level} {bw:.1f} GB/s", 
+                color=color, rotation=38, fontsize=10, ha='center', va='bottom')
 
     perf = results['Performance (GFLOP/s)']
-    plt.scatter(results['HBM Arithmetic Intensity (FLOP/B)'], perf, color='red', label='HBM')
-    plt.xlabel('Arithmetic Intensity (FLOP/B)')
-    plt.ylabel('GFLOP/s')
-    plt.title('Roofline Model FP32')
-    plt.legend()
-    plt.grid(True, which="both", ls="--")
+    
+    x_keys_dict = {
+        'L1': 'L1 Arithmetic Intensity (FLOP/B)',
+        'L2': 'L2 Arithmetic Intensity (FLOP/B)',
+        'HBM': 'HBM Arithmetic Intensity (FLOP/B)'
+    }
+    
+    for mem_level, x_key in x_keys_dict.items():
+        if x_key in results:
+            valore_ai = results[x_key]
+            if valore_ai > 0:
+                color = colors.get(mem_level, 'red')
+                marker = markers.get(mem_level, 'o')
+                ax.scatter(valore_ai, perf, color=color, marker=marker, 
+                           s=150, zorder=5, label=f"Kernel ({mem_level})")
 
+    ax.grid(True, which="major", ls="-", color="grey", alpha=0.8)
+    ax.grid(True, which="minor", ls="--", color="grey", alpha=0.5)
+
+    ax.set_xlabel('Arithmetic Intensity (FLOP/B)', fontsize=12)
+    ax.set_ylabel('Performance (GFLOP/s)', fontsize=12)
+    ax.set_title("Hierarchical Roofline Model FP32", fontsize=14)
+    ax.legend(loc="lower right")
+
+    plt.tight_layout()
     plt.savefig("roofline_fp32.pdf", format='pdf')
     plt.close()
-    print("Plot roofline_fp32.pdf saved")
-
+    print("✅ Plot roofline_fp32.pdf saved") 
+    
 def fp64_roofline_plot(results, specs):
     print("Generating the FP64 plot")
 
