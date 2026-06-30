@@ -107,6 +107,8 @@ def fp32_roofline_plot(results, specs):
                 color=color, rotation=38, fontsize=10, ha='center', va='bottom')
 
     perf = results['Performance (GFLOP/s)']
+
+    print(f"  [Debug] FP64 GFLOP/s: {perf:.1f}")
     
     x_keys_dict = {
         'L1': 'L1 Arithmetic Intensity (FLOP/B)',
@@ -117,6 +119,7 @@ def fp32_roofline_plot(results, specs):
     for mem_level, x_key in x_keys_dict.items():
         if x_key in results:
             valore_ai = results[x_key]
+            print(f"  [Debug] {x_key}: {valore_ai}" )
             if valore_ai > 0:
                 color = colors.get(mem_level, 'red')
                 marker = markers.get(mem_level, 'o')
@@ -181,12 +184,15 @@ def fp64_roofline_plot(results, specs):
         'L2': 'L2 Arithmetic Intensity (FLOP/B)',
         'HBM': 'HBM Arithmetic Intensity (FLOP/B)'
     }
+
+    print(f"  [Debug] FP32 GFLOP/s: {perf:.1f}")
     
     points_plotted = False
     
     for mem_level, x_key in x_keys_dict.items():
         if x_key in results:
             valore_ai = results[x_key]
+            print(f"  [Debug] {x_key}: {valore_ai}" )
 
             if pd.notna(valore_ai) and valore_ai > 0: 
                 color = colors.get(mem_level, 'red')
@@ -319,6 +325,9 @@ def shared_roofline_plot(results, specs):
 
     perf = results.get('Performance GIPS Shared', results.get('Performance_GIPS_Shared', 0.0))
     valore_ai = results.get('Shared Intensity', results.get('Shared_Intensity', 0.0))
+
+    print(f"  [Debug] Shared Performance (GIPS): {perf:.2f}")
+    print(f"  [Debug] Shared Intensity (warp instr/tx): {valore_ai:.2f}")
     
     points_plotted = False
     

@@ -81,7 +81,7 @@ def build_metrics_string(path_to_metrics, architecture):
     return ",".join(valid_metrics)
 
 
-def profiling_ncu(executable, app_args, kernel_name, path_to_metrics, work_dir):
+def profiling_ncu(executable, app_args, kernel_name, path_to_metrics, work_dir, warmup):
     """
     Launching Nsight Compute, running the app and creating the CSV file
     """
@@ -106,7 +106,10 @@ def profiling_ncu(executable, app_args, kernel_name, path_to_metrics, work_dir):
     ]
     command.extend(app_args)
     
-    # print(f"The full command is : {command}")
+    if warmup !=0:
+        print("Inizio warmup...")
+        for _ in range(warmup):
+            subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # Launching NCU and catching the results
     try:
