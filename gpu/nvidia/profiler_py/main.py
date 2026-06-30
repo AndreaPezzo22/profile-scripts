@@ -1,7 +1,53 @@
 import profiler
 import math_engine
 import plotter
+import subprocess
 import os
+import pandas as pd
+import io
+
+def list_kernels(executable, args, max_launches=50):
+    print(f"Looking for the application's kernels: {os.path.basename(executable)}...")
+    
+    command = [
+        "ncu", 
+        "--csv", 
+        "--metrics", "sm__cycles_elapsed.avg", 
+        "-c", str(max_launches), 
+        executable
+    ] + args
+    
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=60)
+        
+        csv_lines = [line for line in result.stdout.split('\n') if line.startswith('"ID"') or (line and line.startswith('"') and "Process ID" not in line)]
+        
+        if len(csv_lines) <= 1:
+            print("No Kernel found")
+            return []
+            
+        testo_csv = '\n'.join(csv_lines)
+        df = pd.read_csv(io.StringIO(testo_csv), thousands=',')
+        df.columns = df.columns.str.replace('"', '').str.strip()
+        df = df.drop(0).reset_index(drop=True)
+        
+        if 'Kernel Name' in df.columns:
+            
+            kernels_grezzi = df['Kernel Name'].dropna().unique()
+            
+            kernels_puliti = set()
+            for k in kernels_grezzi:
+                nome_base = k.split('<')[0].split('(')[0].strip()
+                kernels_puliti.add(nome_base)
+                
+            return sorted(list(kernels_puliti))
+        else:
+            return []
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+    
 
 def main():
 
@@ -12,12 +58,16 @@ def main():
     path_ligand = os.path.expanduser("~/ACA-project/muDock/data/1fkb/1fkb_ligand.mol2")
     work_dir = os.path.expanduser("~/ACA-project/muDock/data/1fkb/")
 
-    KERNEL_TO_ANALYZE = "apply_cuda"
+    KERNEL_TO_ANALYZE = "calc_energy"
     ARGS_MUDOCK = [
         "--protein", path_protein,
         "--ligand", path_ligand,
         "--use", "CUDA:GPU:0"
     ]
+
+    print(f"The kernel list of the application is: {list_kernels(APP_executable, ARGS_MUDOCK)}")
+
+    # return None
 
     # Catching the profiling results
     raw_data_df = profiler.profiling_ncu(
