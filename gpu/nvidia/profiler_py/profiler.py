@@ -73,6 +73,49 @@ def build_metrics_string(path_to_metrics, architecture):
         l1_peak = "l1tex__lsu_writeback_active.sum.peak_sustained"
         l1_per_sec = "l1tex__lsu_writeback_active.sum.per_second"
 
+    # HBM Bandwidth
+    hbm_metrics = [
+        "dram__bytes.sum.peak_sustained"
+    ]
+    
+    # L1 and L2 Cache Bandwidth
+    cache_metrics = [
+        "l1tex__t_bytes.sum.peak_sustained",  # L1 cache bandwidth
+        "lts__t_bytes.sum.peak_sustained"      # L2 cache bandwidth
+    ]
+    
+    # Shared Memory Bandwidth
+    shared_metrics = [
+        "l1tex__data_pipe_l1_op_shared_ld_m_bytes.sum.peak_sustained",  # Shared load
+        "l1tex__data_pipe_l1_op_shared_st_m_bytes.sum.peak_sustained"   # Shared store
+    ]
+    
+    # FP32 Operations (single precision)
+    fp32_metrics = [
+        "sm__sass_thread_inst_executed_op_ffma_pred_on.sum.peak_sustained",  # FFMA (fused multiply-add)
+        "sm__sass_thread_inst_executed_op_fmul_pred_on.sum.peak_sustained",  # FMUL
+        "sm__sass_thread_inst_executed_op_fadd_pred_on.sum.peak_sustained"   # FADD
+    ]
+    
+    # FP64 Operations (double precision)
+    fp64_metrics = [
+        "sm__sass_thread_inst_executed_op_dfma_pred_on.sum.peak_sustained",  # DFMA (fused multiply-add)
+        "sm__sass_thread_inst_executed_op_dmul_pred_on.sum.peak_sustained",  # DMUL
+        "sm__sass_thread_inst_executed_op_dadd_pred_on.sum.peak_sustained"   # DADD
+    ]
+    
+    # Instructions and Cycles
+    instruction_metrics = [
+        "sm__sass_thread_inst_executed_total.sum.peak_sustained",  # Total instructions
+        "sm__cycles_elapsed.avg.per_second"                         # Cycles per second
+    ]
+    
+    # Combine all theoretical metrics
+    theoretical_metrics = (hbm_metrics + cache_metrics + shared_metrics + 
+                          fp32_metrics + fp64_metrics + instruction_metrics)
+
+    # Uniamo tutto
+    valid_metrics.extend(theoretical_metrics)
     valid_metrics.extend([l1_peak, l1_per_sec])
     # Removing duplicates
     valid_metrics = list(dict.fromkeys(valid_metrics))

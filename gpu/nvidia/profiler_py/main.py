@@ -129,7 +129,7 @@ def main():
         shared_roofline_data = math_engine.shared_memory_roofline(raw_data_df)
 
         # Catching the architecture features
-        specs = plotter.get_gpu_specs()
+        specs = plotter.get_gpu_specs(raw_data_df)
 
         # Sending the data to the plotter
         plotter.fp32_roofline_plot(fp32_roofline_data, specs)
