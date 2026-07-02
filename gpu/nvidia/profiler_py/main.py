@@ -7,7 +7,7 @@ import argparse
 import pandas as pd
 import io
 
-def list_kernels(executable, args, max_launches=50):
+def list_kernels(executable, args, work_dir, max_launches=50):
     print(f"Looking for the application's kernels: {os.path.basename(executable)}...")
     
     command = [
@@ -19,7 +19,7 @@ def list_kernels(executable, args, max_launches=50):
     ] + args
     
     try:
-        result = subprocess.run(command, capture_output=True, text=True, timeout=60)
+        result = subprocess.run(command, capture_output=True, text=True, timeout=60, cwd=work_dir)
         
         csv_lines = [line for line in result.stdout.split('\n') if line.startswith('"ID"') or (line and line.startswith('"') and "Process ID" not in line)]
         
@@ -51,74 +51,45 @@ def list_kernels(executable, args, max_launches=50):
     
 
 def main():
-
-    parser = argparse.ArgumentParser(description="Application profiler") 
-
-    parser.add_argument("-d", "--description", action="store_true", 
-                        help="Pass this flag if you want to list the available kernels")
-    
-    # Usa dest="..." per dire ad argparse come chiamare la variabile dentro "args"
-    parser.add_argument("-e", "--EXE", dest="executable", type=str, 
-                        help="Insert the path to the executable", 
-                        default="~/ACA-project/muDock/build/application/muDock")
-    
-    parser.add_argument("-m", "--METRICS", dest="metrics", type=str, 
-                        help="Insert path to the metrics file", 
-                        default="~/ACA-project/profile-scripts/gpu/nvidia/METRICS")
-    
-    parser.add_argument("-l", "--LIGAND", dest="ligand", type=str, 
-                        help="Insert the path to the ligand necessary for the application", 
-                        default="~/ACA-project/muDock/data/1fkb/1fkb_ligand.mol2")
-    
-    parser.add_argument("-p", "--PROTEIN", dest="protein", type=str, 
-                        help="Insert the path to the pocket", 
-                        default="~/ACA-project/muDock/data/1fkb/1fkb_pocket.pdb")
-    
-    parser.add_argument("-wd", "--WORK_DIR", dest="dir", type=str, 
-                        help="Insert the path to the work directory", 
-                        default="~/ACA-project/muDock/data/1fkb/")
-    
-    parser.add_argument("-k", "--KERNEL", dest="kernel", type=str, 
-                        help="Insert the kernel to analyze", 
-                        default="calc_energy")
-    
+    parser = argparse.ArgumentParser(description="====== Roofline Profiler ======")
+    parser.add_argument("-k", "--kernel", type=str, help="Name of the kernel to profile")
+    parser.add_argument("-e", "--exe", type=str, required=True, help="Path to the executable")
+    parser.add_argument("-wd", "--workdir", type=str, required=True, help="Path to the work directory (cwd)")
+    parser.add_argument("-d", "--detect", action="store_true", help="Detects the available kernels")
     parser.add_argument("-wu", "--WARM-UP", dest="warmup", type=int, 
                         help="Insert the number if warm-up iterations",
-                        default=0)
+                        default=0)    
+    parser.add_argument("-m", "--METRICS", dest="metrics", type=str,
+                        help="Insert path to the metrics file",
+                        default="~/ACA-project/profile-scripts/gpu/nvidia/METRICS")    
+
+    parser.add_argument("app_args", nargs=argparse.REMAINDER, help="Arguments to pass to the executabòe")
     
     args = parser.parse_args()
-
-
-    APP_executable = os.path.expanduser(args.executable)
-    METRICS_FILE = os.path.expanduser(args.metrics)
     
-    path_protein = os.path.expanduser(args.protein)
-    path_ligand = os.path.expanduser(args.ligand)
-    work_dir = os.path.expanduser(args.dir)
+    METRICS_FILE = os.path.expanduser(args.metrics)
 
-    KERNEL_TO_ANALYZE = args.kernel
+    app_args = args.app_args
+    if app_args and app_args[0] == "--":
+        app_args = app_args[1:]
 
-    warmup = args.warmup
+    if args.detect:
+        print(f"Looking for the application's kernels: {os.path.basename(args.exe)}...")
+        kernel_list = list_kernels(args.exe, app_args, args.workdir, max_launches=50) 
+        print(f"The kernel list of the application is: {kernel_list}")
+        return
 
-    ARGS_MUDOCK = [
-        "--protein", path_protein,
-        "--ligand", path_ligand,
-        "--use", "CUDA:GPU:0"
-    ]
-
-    if args.description:
-        print(f"The kernel list of the application is: {list_kernels(APP_executable, ARGS_MUDOCK)}")
-        return None
-
-    # Catching the profiling results
-    raw_data_df = profiler.profiling_ncu(
-        executable=APP_executable, 
-        app_args=ARGS_MUDOCK, 
-        kernel_name=KERNEL_TO_ANALYZE, 
-        path_to_metrics=METRICS_FILE,
-        work_dir=work_dir
-        warmup=warmup
-    )
+    if args.kernel:
+        print(f"\nLaunching the profiling for kernel: '{args.kernel}'...")
+        
+        raw_data_df = profiler.profiling_ncu(
+            executable=args.exe,       
+            app_args=app_args,        
+            kernel_name=args.kernel,   
+            path_to_metrics=METRICS_FILE, 
+            work_dir=args.workdir,
+            warmup=args.warmup
+        )
 
     if raw_data_df is not None:
 

@@ -145,7 +145,7 @@ def fp32_roofline_plot(results, specs):
 
     perf = results['Performance (GFLOP/s)']
 
-    print(f"  [Debug] FP64 GFLOP/s: {perf:.1f}")
+    print(f"  [Debug] FP32 GFLOP/s: {perf:.1f}")
     
     x_keys_dict = {
         'L1': 'L1 Arithmetic Intensity (FLOP/B)',
@@ -222,7 +222,7 @@ def fp64_roofline_plot(results, specs):
         'HBM': 'HBM Arithmetic Intensity (FLOP/B)'
     }
 
-    print(f"  [Debug] FP32 GFLOP/s: {perf:.1f}")
+    print(f"  [Debug] FP64 GFLOP/s: {perf:.1f}")
     
     points_plotted = False
     

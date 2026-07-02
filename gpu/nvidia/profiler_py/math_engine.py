@@ -33,7 +33,7 @@ def fp32_roofline(df):
         'HBM Arithmetic Intensity (FLOP/B)': df['AI_HBM'].mean()
     }
 
-    print(f"The values for fp32 are: {avg_result}")
+    print(f"The avg time is: {avg_result['Avg time (s)']:.4f}")
 
     return avg_result
 
