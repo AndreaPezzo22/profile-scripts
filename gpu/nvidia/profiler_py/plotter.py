@@ -110,7 +110,7 @@ def get_gpu_specs(df):
         "trans_bw": trans_bw
     }
 
-def fp32_roofline_plot(results, specs):
+def fp32_roofline_plot(results, specs, plot_dir):
     print("Generating the FP32 plot")
     
     # Catching the theoretical values
@@ -183,11 +183,11 @@ def fp32_roofline_plot(results, specs):
     ax.legend(loc="lower right")
 
     plt.tight_layout()
-    plt.savefig("roofline_fp32.pdf", format='pdf')
+    plt.savefig(os.path.join(plot_dir, "roofline_fp32.pdf"), format='pdf')
     plt.close()
     print("✅ Plot roofline_fp32.pdf saved") 
 
-def fp64_roofline_plot(results, specs):
+def fp64_roofline_plot(results, specs, plot_dir):
     print("Generating the FP64 Hierarchical plot")
     
     peak = specs["peak_fp64"]
@@ -260,12 +260,12 @@ def fp64_roofline_plot(results, specs):
         ax.legend(loc="lower right")
 
     plt.tight_layout()
-    plt.savefig("roofline_fp64.pdf", format='pdf')
+    plt.savefig(os.path.join(plot_dir, "roofline_fp64.pdf"), format='pdf')
     plt.close()
     print("✅ Plot roofline_fp64.pdf saved")
 
 
-def instruction_roofline_plot(results, specs):
+def instruction_roofline_plot(results, specs, plot_dir):
 
     print("Generating the Instruction Hierarchical plot")
     
@@ -327,11 +327,11 @@ def instruction_roofline_plot(results, specs):
         ax.legend(loc="lower right")
 
     plt.tight_layout()
-    fig.savefig("roofline_instructions.pdf", format='pdf')
+    fig.savefig(os.path.join(plot_dir, "roofline_instructions.pdf"), format='pdf')
     plt.close(fig)
     print("✅ Plot roofline_instructions.pdf saved")
 
-def shared_roofline_plot(results, specs):
+def shared_roofline_plot(results, specs, plot_dir):
     print("Generating the Shared Memory plot")
     
     # Theoretical peak values
@@ -393,6 +393,6 @@ def shared_roofline_plot(results, specs):
     ax.set_ylabel('Performance (warp GIPS)', fontsize=11)
 
     plt.tight_layout()
-    fig.savefig("roofline_shared.pdf", format='pdf')
+    fig.savefig(os.path.join(plot_dir, "roofline_shared.pdf"), format='pdf')
     plt.close(fig)
     print("✅ Plot roofline_shared.pdf saved")

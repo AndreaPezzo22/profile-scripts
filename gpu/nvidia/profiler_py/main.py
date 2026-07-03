@@ -107,6 +107,10 @@ def main():
 
     if raw_data_df is not None:
 
+        # Creating a folder to save the plots where we are executing the script
+        plot_dir = os.path.join(os.getcwd(), f"roofline_plots_{args.exe.split(os.sep)[-1].split('.')[0]}_{args.kernel}")
+        os.makedirs(plot_dir, exist_ok=True)
+
         # Catching the results for the different Rooflines
         fp32_roofline_data = math_engine.fp32_roofline(raw_data_df)
         fp64_roofline_data = math_engine.fp64_roofline(raw_data_df)
@@ -117,10 +121,10 @@ def main():
         specs = plotter.get_gpu_specs(raw_data_df)
 
         # Sending the data to the plotter
-        plotter.fp32_roofline_plot(fp32_roofline_data, specs)
-        plotter.fp64_roofline_plot(fp64_roofline_data, specs)
-        plotter.shared_roofline_plot(shared_roofline_data, specs)
-        plotter.instruction_roofline_plot(ai_roofline_data, specs)
+        plotter.fp32_roofline_plot(fp32_roofline_data, specs, plot_dir)
+        plotter.fp64_roofline_plot(fp64_roofline_data, specs, plot_dir)
+        plotter.shared_roofline_plot(shared_roofline_data, specs, plot_dir)
+        plotter.instruction_roofline_plot(ai_roofline_data, specs, plot_dir)
 
         # Sending data to the Plotter
 
