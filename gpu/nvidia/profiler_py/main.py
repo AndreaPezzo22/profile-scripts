@@ -10,6 +10,7 @@ import io
 def list_kernels(executable, args, work_dir, max_launches=50):
     print(f"Looking for the application's kernels: {os.path.basename(executable)}...")
     
+    # Building the command
     command = [
         "ncu", 
         "--csv", 
@@ -21,17 +22,20 @@ def list_kernels(executable, args, work_dir, max_launches=50):
     try:
         result = subprocess.run(command, capture_output=True, text=True, timeout=60, cwd=work_dir)
         
+        # We select all the rows of the output and we keep just those referred to the kernels
         csv_lines = [line for line in result.stdout.split('\n') if line.startswith('"ID"') or (line and line.startswith('"') and "Process ID" not in line)]
         
         if len(csv_lines) <= 1:
             print("No Kernel found")
             return []
-            
-        testo_csv = '\n'.join(csv_lines)
-        df = pd.read_csv(io.StringIO(testo_csv), thousands=',')
-        df.columns = df.columns.str.replace('"', '').str.strip()
-        df = df.drop(0).reset_index(drop=True)
         
+        # Creates the Data Frame Pandas
+        testo_csv = '\n'.join(csv_lines) # The lines are displaced in a single one
+        df = pd.read_csv(io.StringIO(testo_csv), thousands=',' ) # thousands handles the thousands in the file
+        df.columns = df.columns.str.replace('"', '').str.strip() # Cleans the columns names from "" and additional spaces
+        df = df.drop(0).reset_index(drop=True) # Erases the first row containing the metadata
+        
+        # Extracts pure kernel names without < and ( symbols
         if 'Kernel Name' in df.columns:
             
             kernels_grezzi = df['Kernel Name'].dropna().unique()
@@ -51,11 +55,17 @@ def list_kernels(executable, args, work_dir, max_launches=50):
     
 
 def main():
+
+    # Collects the arguments needed by the application to run 
     parser = argparse.ArgumentParser(description="====== Roofline Profiler ======")
-    parser.add_argument("-k", "--kernel", type=str, help="Name of the kernel to profile")
-    parser.add_argument("-e", "--exe", type=str, required=True, help="Path to the executable")
-    parser.add_argument("-wd", "--workdir", type=str, required=True, help="Path to the work directory (cwd)")
-    parser.add_argument("-d", "--detect", action="store_true", help="Detects the available kernels")
+    parser.add_argument("-k", "--kernel", type=str, 
+                        help="Name of the kernel to profile")
+    parser.add_argument("-e", "--exe", type=str, required=True, 
+                        help="Path to the executable")
+    parser.add_argument("-wd", "--workdir", type=str, required=True, 
+                        help="Path to the work directory (cwd)")
+    parser.add_argument("-d", "--detect", action="store_true", 
+                        help="Detects the available kernels")
     parser.add_argument("-wu", "--WARM-UP", dest="warmup", type=int, 
                         help="Insert the number if warm-up iterations",
                         default=0)    
@@ -69,19 +79,23 @@ def main():
     
     METRICS_FILE = os.path.expanduser(args.metrics)
 
+    # All the elements after -- are selected as arguments
     app_args = args.app_args
     if app_args and app_args[0] == "--":
         app_args = app_args[1:]
 
+    # If the -d flag is selected, the application's kernel list is returned
     if args.detect:
         print(f"Looking for the application's kernels: {os.path.basename(args.exe)}...")
         kernel_list = list_kernels(args.exe, app_args, args.workdir, max_launches=50) 
         print(f"The kernel list of the application is: {kernel_list}")
         return
 
+    # Otherwise, the normal profilation is executed
     if args.kernel:
         print(f"\nLaunching the profiling for kernel: '{args.kernel}'...")
         
+        # All the collected data get sent to the profiler
         raw_data_df = profiler.profiling_ncu(
             executable=args.exe,       
             app_args=app_args,        

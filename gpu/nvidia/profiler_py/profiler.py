@@ -73,6 +73,8 @@ def build_metrics_string(path_to_metrics, architecture):
         l1_peak = "l1tex__lsu_writeback_active.sum.peak_sustained"
         l1_per_sec = "l1tex__lsu_writeback_active.sum.per_second"
 
+    # THEORETICAL PEAK METRICS
+
     # HBM Bandwidth
     hbm_metrics = [
         "dram__bytes.sum.peak_sustained"
@@ -114,7 +116,6 @@ def build_metrics_string(path_to_metrics, architecture):
     theoretical_metrics = (hbm_metrics + cache_metrics + shared_metrics + 
                           fp32_metrics + fp64_metrics + instruction_metrics)
 
-    # Uniamo tutto
     valid_metrics.extend(theoretical_metrics)
     valid_metrics.extend([l1_peak, l1_per_sec])
     # Removing duplicates
@@ -139,23 +140,26 @@ def profiling_ncu(executable, app_args, kernel_name, path_to_metrics, work_dir, 
     if not gpu_architecture:
         print("\nERROR. No architecture found.")
 
+    # Build the full command for the profiling
     command = [
         "ncu",
         "--csv",
         "--page", "raw",
-        "--kernel-name", kernel_name,
-        "--metrics", metrics_string,
-        executable
+        "--kernel-name", kernel_name, # Name of the kernel to be profiled
+        "--metrics", metrics_string, # String of metrics collected
+        executable # Path to the application executable
     ]
     command.extend(app_args)
     
+    # Warmup iterations, without collecting the output
     if warmup !=0:
-        print("Inizio warmup...")
+        print(f"Starting the Warmup with {warmup} iterations...")
         for _ in range(warmup):
             subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # Launching NCU and catching the results
     try:
+        print(f"Starting the profiling of the kernel {kernel_name} ...")
         result = subprocess.run(command, capture_output=True, text=True, timeout=1200, cwd=work_dir)
     except Exception as e:
         print(f"Critical error during the execution: {e}")
@@ -188,11 +192,12 @@ def profiling_ncu(executable, app_args, kernel_name, path_to_metrics, work_dir, 
     
     print(f"The csv has been generated and saved in: {path_csv}")
 
-    df = pd.read_csv(io.StringIO(text_csv), thousands=',')
+    df = pd.read_csv(io.StringIO(text_csv), thousands=',') # Fixing the thousands values
     df.columns = df.columns.str.replace('"', '').str.strip()
 
     df = df.drop(0).reset_index(drop=True)
 
+    # Convert the values into numeric, avoiding type errors
     for col in df.columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
 

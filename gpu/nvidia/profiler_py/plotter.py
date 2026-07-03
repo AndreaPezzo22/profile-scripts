@@ -42,10 +42,12 @@ def get_gpu_specs(df):
     except:
         gpu_name = "Unknown GPU"
     
+    # Computing the Clock frequence
     freq_hz = _get_freq_hz(df)
     clock_mhz = freq_hz / 1e6
     sm_count = 108
 
+    # Computing the theoretical peak of the FP32 operations
     fp32_ffma = _get_metric_value(df, 'sm__sass_thread_inst_executed_op_ffma_pred_on.sum.peak_sustained')
     fp32_fmul = _get_metric_value(df, 'sm__sass_thread_inst_executed_op_fmul_pred_on.sum.peak_sustained')
     fp32_fadd = _get_metric_value(df, 'sm__sass_thread_inst_executed_op_fadd_pred_on.sum.peak_sustained')
@@ -54,6 +56,7 @@ def get_gpu_specs(df):
     if peak_gflops_fp32 == 0:
         peak_gflops_fp32 = 19500.0
 
+    # Computing the theoretical peak of the FP64 operations
     fp64_dfma = _get_metric_value(df, 'sm__sass_thread_inst_executed_op_dfma_pred_on.sum.peak_sustained')
     fp64_dmul = _get_metric_value(df, 'sm__sass_thread_inst_executed_op_dmul_pred_on.sum.peak_sustained')
     fp64_dadd = _get_metric_value(df, 'sm__sass_thread_inst_executed_op_dadd_pred_on.sum.peak_sustained')
@@ -62,6 +65,7 @@ def get_gpu_specs(df):
     if peak_gflops_fp64 == 0:
         peak_gflops_fp64 = 9700.0
 
+    # Computing the throughput transforming the theorretical value from memory per cycle to memory per second
     hbm_cycles = _get_metric_value(df, 'dram__bytes.sum.peak_sustained')
     bw_hbm = (hbm_cycles * freq_hz) / 1e9 if hbm_cycles > 0 else 1555.0
 
@@ -109,6 +113,7 @@ def get_gpu_specs(df):
 def fp32_roofline_plot(results, specs):
     print("Generating the FP32 plot")
     
+    # Catching the theoretical values
     peak = specs["peak_fp32"]
     bw_dict = {
         'L1': specs["bw_l1"],
@@ -116,6 +121,7 @@ def fp32_roofline_plot(results, specs):
         'HBM': specs["bandwidth"]
     }
    
+   # Creating the plot as log scale
     fig, ax = plt.subplots(figsize=(10, 8))
     ax.set_xscale('log')
     ax.set_yscale('log')
@@ -130,13 +136,17 @@ def fp32_roofline_plot(results, specs):
     colors = {'L1': '#D49A2A', 'L2': '#2A9D8F', 'HBM': '#6D4C41'}
     markers = {'L1': 'o', 'L2': '^', 'HBM': 's'}
 
+    # Drawing the different memory level L1, L2, HBM
     for mem_level, bw in bw_dict.items():
         color = colors.get(mem_level, 'blue')
+        # For each intensity level x, computes expected performance
         y_vals = x_vals * bw
         
+        # Plots the valid ideas drawing the memory line
         valid_idx = y_vals <= peak
         ax.plot(x_vals[valid_idx], y_vals[valid_idx], color=color, linewidth=1.2)
         
+        # Finds the Ridge point, which is the meeting point between the peak and the bandwidth
         ridge_x = peak / bw
         label_x = ridge_x / 3
         label_y = label_x * bw
@@ -160,6 +170,7 @@ def fp32_roofline_plot(results, specs):
             if valore_ai > 0:
                 color = colors.get(mem_level, 'red')
                 marker = markers.get(mem_level, 'o')
+                # Creates the point on the plot for the corresponfing memory level
                 ax.scatter(valore_ai, perf, color=color, marker=marker, 
                            s=150, zorder=5, label=f"Kernel ({mem_level})")
 
@@ -258,14 +269,16 @@ def instruction_roofline_plot(results, specs):
 
     print("Generating the Instruction Hierarchical plot")
     
-    peak_gips = specs.get("peak_gips", 600.0)
+    peak_gips = specs["peak_gips"]
     
     bw_dict_bytes = {
-        'L1': specs.get("bw_l1", 15161.8),
-        'L2': specs.get("bw_l2", 5373.0),
-        'HBM': specs.get("bandwidth", 1555.0)
+        'L1': specs.get("bw_l1"),
+        'L2': specs.get("bw_l2"),
+        'HBM': specs.get("bandwidth")
     }
     
+    # We transform the bandwidth values from byte/s to transactions/s.
+    # We assume that the size of a single transaction for global memory is is 32 bytes (E' corretto ?)
     tx_dict = { mem_level: bw / 32.0 for mem_level, bw in bw_dict_bytes.items() }
     
     fig, ax = plt.subplots(figsize=(10, 8))
@@ -293,10 +306,10 @@ def instruction_roofline_plot(results, specs):
         ax.text(label_x, label_y * 1.1, f"{mem_level} {tx_rate:.1f} GTXN/s", 
                 color=color, rotation=42, fontsize=10, ha='center', va='bottom')
 
-    perf = results.get('Performance GIPS', results.get('GIPS', 0.0))
-    valore_ai = results.get('Instruction Intensity', results.get('Instruction_Intensity', 0.0))
+    perf = results.get('Performance GIPS')
+    valore_ai = results.get('Instruction Intensity')
     
-    print(f"  [Debug] Disegno Kernel a: X={valore_ai:.2f}, Y={perf:.2f}")
+    print(f"  [Debug] Drawinf Kernel at: X={valore_ai:.2f}, Y={perf:.2f}")
     
     points_plotted = False
     if perf > 0 and valore_ai > 0 and not math.isnan(perf) and not math.isnan(valore_ai):
@@ -321,7 +334,7 @@ def instruction_roofline_plot(results, specs):
 def shared_roofline_plot(results, specs):
     print("Generating the Shared Memory plot")
     
-    # Valori di picco
+    # Theoretical peak values
     peak_gips = specs.get("peak_gips", 600.0)
     max_tx_rate = specs.get("trans_bw", peak_gips)
   
@@ -345,6 +358,10 @@ def shared_roofline_plot(results, specs):
     ax.text(label_x, label_y * 1.1, f"Shared {max_tx_rate:.1f} GTXN/s", 
             color=color_shared, rotation=45, fontsize=10, ha='center', va='bottom')
 
+    # The Shared memory is organized in in banks, if more threads of the same warp access to the same bank
+    # in the same cycle, a conflict occurs. In that case, the systems needs to serialize the accesses .
+    # 
+
     # A) No bank conflict (x = 1.0)
     y_no_conflict = min(1.0 * max_tx_rate, peak_gips)
     ax.vlines(x=1.0, ymin=1e0, ymax=y_no_conflict, color=color_shared, linewidth=1.0)
@@ -356,8 +373,8 @@ def shared_roofline_plot(results, specs):
     ax.vlines(x=x_conflict, ymin=1e0, ymax=y_conflict_max, color=color_shared, linewidth=1.0)
     ax.text(x_conflict * 1.15, 1.2, "32-way bank conflict", color=color_shared, rotation=90, va='bottom', ha='left', fontsize=10)
 
-    perf = results.get('Performance GIPS Shared', results.get('Performance GIPS', results.get('GIPS', 0.0)))
-    valore_ai = results.get('Shared Intensity', results.get('Shared_Intensity', 0.0))
+    perf = results.get('Performance GIPS Shared')
+    valore_ai = results.get('Shared Intensity')
 
     print(f"  [Debug] Shared Performance (GIPS): {perf:.2f}")
     print(f"  [Debug] Shared Intensity (warp instr/tx): {valore_ai:.2f}")
