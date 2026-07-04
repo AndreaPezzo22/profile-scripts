@@ -36,16 +36,18 @@ def get_gpu_specs(df):
     """
     
     # Get GPU name for reference
-    cmd = ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"]
+    cmd = ["nvidia-smi", "--query-gpu=name,compute_cap", "--format=csv,noheader"]
     try:
         output = subprocess.check_output(cmd).decode("utf-8").strip().split('\n')[0].split(', ')
         gpu_name = output[0]
         cc = float(output[1])
-        sm_count = int(output[2])
     except:
         gpu_name = "Unknown GPU"
         cc = 0.0
-        sm_count = 108
+
+    sm_count = _get_metric_value(df, 'device__attribute_multiprocessor_count')
+
+    print(f"Detected GPU: {gpu_name}, Compute Capability: {cc}, SM Count: {sm_count}")
     
     # Computing the Clock frequence
     freq_hz = _get_freq_hz(df)
