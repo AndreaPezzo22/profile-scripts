@@ -38,14 +38,35 @@ def get_gpu_specs(df):
     # Get GPU name for reference
     cmd = ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"]
     try:
-        gpu_name = subprocess.check_output(cmd).decode("utf-8").strip().split('\n')[0]
+        output = subprocess.check_output(cmd).decode("utf-8").strip().split('\n')[0].split(', ')
+        gpu_name = output[0]
+        cc = float(output[1])
+        sm_count = int(output[2])
     except:
         gpu_name = "Unknown GPU"
+        cc = 0.0
+        sm_count = 108
     
     # Computing the Clock frequence
     freq_hz = _get_freq_hz(df)
     clock_mhz = freq_hz / 1e6
-    sm_count = 108
+
+    cores_per_sm = {
+        6.0: {'fp32': 64, 'fp64': 32},  # Pascal P100
+        6.1: {'fp32': 128, 'fp64': 4},  # Pascal GTX 1080 / Titan Xp
+        7.0: {'fp32': 64, 'fp64': 32},  # Volta V100
+        7.5: {'fp32': 64, 'fp64': 2},   # Turing T4 / RTX 2000
+        8.0: {'fp32': 64, 'fp64': 32},  # Ampere A100
+        8.6: {'fp32': 128, 'fp64': 2},  # Ampere RTX 3000 / A40
+        8.9: {'fp32': 128, 'fp64': 2},  # Ada Lovelace RTX 4000
+        9.0: {'fp32': 128, 'fp64': 64}  # Hopper H100
+    }
+
+    fp32_cores = cores_per_sm.get(cc, {}).get('fp32', 0)
+    fp64_cores = cores_per_sm.get(cc, {}).get('fp64', 0)
+
+    theoretical_peak_fp32 = (sm_count * fp32_cores * 2 * freq_hz) / 1e9 if fp32_cores > 0 else 0
+    theoretical_peak_fp64 = (sm_count * fp64_cores * 2 * freq_hz) / 1e9 if fp64_cores > 0 else 0
 
     # Computing the theoretical peak of the FP32 operations
     fp32_ffma = _get_metric_value(df, 'sm__sass_thread_inst_executed_op_ffma_pred_on.sum.peak_sustained')
@@ -53,8 +74,8 @@ def get_gpu_specs(df):
     fp32_fadd = _get_metric_value(df, 'sm__sass_thread_inst_executed_op_fadd_pred_on.sum.peak_sustained')
 
     peak_gflops_fp32 = ((2 * fp32_ffma) + fp32_fmul + fp32_fadd) * freq_hz / 1e9
-    if peak_gflops_fp32 == 0:
-        peak_gflops_fp32 = 19500.0
+    if theoretical_peak_fp32 > 0 and (peak_gflops_fp32 == 0 or peak_gflops_fp32 > theoretical_peak_fp32 * 1.1):
+        peak_gflops_fp32 = theoretical_peak_fp32
 
     # Computing the theoretical peak of the FP64 operations
     fp64_dfma = _get_metric_value(df, 'sm__sass_thread_inst_executed_op_dfma_pred_on.sum.peak_sustained')
@@ -62,8 +83,8 @@ def get_gpu_specs(df):
     fp64_dadd = _get_metric_value(df, 'sm__sass_thread_inst_executed_op_dadd_pred_on.sum.peak_sustained')
 
     peak_gflops_fp64 = ((2 * fp64_dfma) + fp64_dmul + fp64_dadd) * freq_hz / 1e9
-    if peak_gflops_fp64 == 0:
-        peak_gflops_fp64 = 9700.0
+    if theoretical_peak_fp64 > 0 and (peak_gflops_fp64 == 0 or peak_gflops_fp64 > theoretical_peak_fp64 * 1.1):
+        peak_gflops_fp64 = theoretical_peak_fp64
 
     # Computing the throughput transforming the theorretical value from memory per cycle to memory per second
     hbm_cycles = _get_metric_value(df, 'dram__bytes.sum.peak_sustained')
