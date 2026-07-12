@@ -154,7 +154,7 @@ def fp32_roofline_plot(results, specs, plot_dir):
 
     x_vals = np.logspace(-3, 3, 500)
     ax.axhline(peak, color='black', linewidth=1.2)
-    ax.text(1e1, peak * 1.1, f"Theoretical peak FP32: {peak:.1f} GFLOP/s", ha='center')
+    ax.text(1e1, peak * 1.1, f"Theoretical peak FP32: {peak:.1f} GFLOP/s", fontsize=16, ha='center')
 
     colors = {'L1': '#D49A2A', 'L2': '#2A9D8F', 'HBM': '#6D4C41'}
     markers = {'L1': 'o', 'L2': '^', 'HBM': 's'}
@@ -173,8 +173,8 @@ def fp32_roofline_plot(results, specs, plot_dir):
         ridge_x = peak / bw
         label_x = ridge_x / 3
         label_y = label_x * bw
-        ax.text(label_x, label_y * 1.1, f"{mem_level} {bw:.1f} GB/s", 
-                color=color, rotation=38, fontsize=10, ha='center', va='bottom')
+        ax.text(label_x/3, label_y * 0.2, f"{mem_level} {bw:.1f} GB/s", 
+                color=color, rotation=38, fontsize=14, ha='center', va='bottom')
 
     perf = results['Performance (GFLOP/s)']
 
@@ -200,8 +200,8 @@ def fp32_roofline_plot(results, specs, plot_dir):
     ax.grid(True, which="major", ls="-", color="grey", alpha=0.8)
     ax.grid(True, which="minor", ls="--", color="grey", alpha=0.5)
 
-    ax.set_xlabel('Arithmetic Intensity (FLOP/B)', fontsize=12)
-    ax.set_ylabel('Performance (GFLOP/s)', fontsize=12)
+    ax.set_xlabel('Arithmetic Intensity (FLOP/B)', fontsize=14)
+    ax.set_ylabel('Performance (GFLOP/s)', fontsize=14)
     ax.set_title("Hierarchical Roofline Model FP32", fontsize=14)
     ax.legend(loc="lower right")
 
@@ -230,7 +230,7 @@ def fp64_roofline_plot(results, specs, plot_dir):
     x_vals = np.logspace(-3, 3, 500)
 
     ax.axhline(peak, color='black', linewidth=1.2)
-    ax.text(1e1, peak * 1.1, f"Theoretical peak FP64: {peak:.1f} GFLOP/s", ha='center')
+    ax.text(1e1, peak * 1.1, f"Theoretical peak FP64: {peak:.1f} GFLOP/s", fontsize=16, ha='center')
 
     colors = {'L1': '#D49A2A', 'L2': '#2A9D8F', 'HBM': '#6D4C41'}
     markers = {'L1': 'o', 'L2': '^', 'HBM': 's'}
@@ -245,8 +245,8 @@ def fp64_roofline_plot(results, specs, plot_dir):
         ridge_x = peak / bw
         label_x = ridge_x / 3  # Posiziona a 1/3 della salita
         label_y = label_x * bw
-        ax.text(label_x, label_y * 1.1, f"{mem_level} {bw:.1f} GB/s", 
-                color=color, rotation=38, fontsize=10, ha='center', va='bottom')
+        ax.text(label_x/3, label_y*0.2, f"{mem_level} {bw:.1f} GB/s", 
+                color=color, rotation=38, fontsize=14, ha='center', va='bottom')
 
     perf = results['Performance (GFLOP/s)']
     
@@ -275,8 +275,8 @@ def fp64_roofline_plot(results, specs, plot_dir):
     ax.grid(True, which="major", ls="-", color="grey", alpha=0.8)
     ax.grid(True, which="minor", ls="--", color="grey", alpha=0.5)
 
-    ax.set_xlabel('Arithmetic Intensity (FLOP/B)', fontsize=12)
-    ax.set_ylabel('Performance (GFLOP/s)', fontsize=12)
+    ax.set_xlabel('Arithmetic Intensity (FLOP/B)', fontsize=14)
+    ax.set_ylabel('Performance (GFLOP/s)', fontsize=14)
     ax.set_title("Hierarchical Roofline Model FP64", fontsize=14)
     
     if points_plotted:
@@ -312,7 +312,7 @@ def instruction_roofline_plot(results, specs, plot_dir):
     ax.set_ylim(1e0, 1e3)
 
     ax.hlines(y=peak_gips, xmin=1e-2, xmax=2e3, color='black', linewidth=1.2)
-    ax.text(1e1, peak_gips * 1.1, f"Theoretical peak: {peak_gips:.1f} warp GIPS", ha='center')
+    ax.text(1e1, peak_gips * 1.1, f"Theoretical peak: {peak_gips:.1f} warp GIPS", fontsize=16, ha='center')
 
     colors = {'L1': 'red', 'L2': 'lime', 'HBM': 'blue'}
 
@@ -326,8 +326,8 @@ def instruction_roofline_plot(results, specs, plot_dir):
         
         label_x = ridge_x / 3
         label_y = label_x * tx_rate
-        ax.text(label_x, label_y * 1.1, f"{mem_level} {tx_rate:.1f} GTXN/s", 
-                color=color, rotation=42, fontsize=10, ha='center', va='bottom')
+        ax.text(label_x/3, label_y * 0.2, f"{mem_level} {tx_rate:.1f} GTXN/s", 
+                color=color, rotation=42, fontsize=14, ha='center', va='bottom')
 
     perf = results.get('Performance GIPS')
     valore_ai = results.get('Instruction Intensity')
@@ -343,8 +343,8 @@ def instruction_roofline_plot(results, specs, plot_dir):
     ax.grid(True, which="major", ls="-", color="grey", alpha=0.8)
     ax.grid(True, which="minor", ls="--", color="grey", alpha=0.5)
 
-    ax.set_xlabel('Instruction Intensity (warp instructions per transaction)', fontsize=12)
-    ax.set_ylabel('Performance (warp GIPS)', fontsize=12)
+    ax.set_xlabel('Instruction Intensity (warp instructions per transaction)', fontsize=14)
+    ax.set_ylabel('Performance (warp GIPS)', fontsize=14)
     
     if points_plotted:
         ax.legend(loc="lower right")
@@ -371,7 +371,7 @@ def shared_roofline_plot(results, specs, plot_dir):
     color_shared = 'magenta'
 
     ax.hlines(y=peak_gips, xmin=1e-2, xmax=2e3, color='black', linewidth=1.2)
-    ax.text(1e1, peak_gips * 1.1, f"Theoretical peak: {peak_gips:.1f} warp GIPS", ha='center', fontsize=10)
+    ax.text(1e1, peak_gips * 1.1, f"Theoretical peak: {peak_gips:.1f} warp GIPS", ha='center', fontsize=16)
 
     ridge_x = peak_gips / max_tx_rate
     ax.plot([1e-3, ridge_x], [1e-3 * max_tx_rate, peak_gips], color=color_shared, linewidth=1.2)
@@ -388,13 +388,13 @@ def shared_roofline_plot(results, specs, plot_dir):
     # A) No bank conflict (x = 1.0)
     y_no_conflict = min(1.0 * max_tx_rate, peak_gips)
     ax.vlines(x=1.0, ymin=1e0, ymax=y_no_conflict, color=color_shared, linewidth=1.0)
-    ax.text(1.15, 1.2, "No bank conflict", color=color_shared, rotation=90, va='bottom', ha='left', fontsize=10)
+    ax.text(1.15, 1.2, "No bank conflict", color=color_shared, rotation=90, va='bottom', ha='left', fontsize=14)
 
     # B) 32-way bank conflict (x = 1/32)
     x_conflict = 1.0 / 32.0
     y_conflict_max = min(x_conflict * max_tx_rate, peak_gips)
     ax.vlines(x=x_conflict, ymin=1e0, ymax=y_conflict_max, color=color_shared, linewidth=1.0)
-    ax.text(x_conflict * 1.15, 1.2, "32-way bank conflict", color=color_shared, rotation=90, va='bottom', ha='left', fontsize=10)
+    ax.text(x_conflict * 1.15, 1.2, "32-way bank conflict", color=color_shared, rotation=90, va='bottom', ha='left', fontsize=14)
 
     perf = results.get('Performance GIPS Shared')
     valore_ai = results.get('Shared Intensity')
@@ -404,7 +404,7 @@ def shared_roofline_plot(results, specs, plot_dir):
     
     if perf > 0 and valore_ai > 0 and not math.isnan(perf) and not math.isnan(valore_ai):
         ax.scatter(valore_ai, perf, color=color_shared, marker='s', s=60, zorder=5)
-        ax.text(valore_ai * 0.85, perf, color='black', ha='right', va='center', fontsize=9)
+        ax.text(valore_ai * 0.85, perf, color='black', ha='right', va='center', fontsize=14)
 
     ax.grid(True, which="major", ls="--", color="black", alpha=0.5)
     ax.grid(True, which="minor", ls=":", color="black", alpha=0.5)
@@ -412,8 +412,8 @@ def shared_roofline_plot(results, specs, plot_dir):
     ax.spines['top'].set_visible(True)
     ax.spines['right'].set_visible(True)
 
-    ax.set_xlabel('Instruction Intensity (warp instructions per transaction)', fontsize=11)
-    ax.set_ylabel('Performance (warp GIPS)', fontsize=11)
+    ax.set_xlabel('Instruction Intensity (warp instructions per transaction)', fontsize=14)
+    ax.set_ylabel('Performance (warp GIPS)', fontsize=14)
 
     plt.tight_layout()
     fig.savefig(os.path.join(plot_dir, "roofline_shared.pdf"), format='pdf')
