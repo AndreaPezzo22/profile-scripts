@@ -58,7 +58,7 @@ def fp64_roofline(df):
     )                
 
     # Computing the throughput in GFLOP/s
-    df['Perfomance_GFLOP_s'] = df['fp64_flops'] / (df['elapsed_s']*1e9)
+    df['Performance_GFLOP_s_FP64'] = df['fp64_flops'] / (df['elapsed_s']*1e9)
 
     df['AI_L1'] = df['fp64_flops'] / df['l1tex__t_bytes.sum']
     df['AI_L2'] = df['fp64_flops'] / df['lts__t_bytes.sum']
@@ -66,7 +66,7 @@ def fp64_roofline(df):
 
     avg_result = {
         'Avg time (s)': df['elapsed_s'].mean(),
-        'Performance (GFLOP/s)': df['Performance_GFLOP_s'].mean(),
+        'Performance FP64 (GFLOP/s)': df['Performance_GFLOP_s_FP64'].mean(),
         'L1 Arithmetic Intensity (FLOP/B)': df['AI_L1'].mean(),
         'L2 Arithmetic Intensity (FLOP/B)': df['AI_L2'].mean(),
         'HBM Arithmetic Intensity (FLOP/B)': df['AI_HBM'].mean()

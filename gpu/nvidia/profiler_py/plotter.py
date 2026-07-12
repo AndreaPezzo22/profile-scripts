@@ -248,7 +248,7 @@ def fp64_roofline_plot(results, specs, plot_dir):
         ax.text(label_x/3, label_y*0.2, f"{mem_level} {bw:.1f} GB/s", 
                 color=color, rotation=38, fontsize=14, ha='center', va='bottom')
 
-    perf = results['Performance (GFLOP/s)']
+    perf = results['Performance FP64 (GFLOP/s)']
     
     x_keys_dict = {
         'L1': 'L1 Arithmetic Intensity (FLOP/B)',
