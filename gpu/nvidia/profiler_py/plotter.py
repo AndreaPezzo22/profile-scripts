@@ -332,7 +332,7 @@ def instruction_roofline_plot(results, specs, plot_dir):
     perf = results.get('Performance GIPS')
     valore_ai = results.get('Instruction Intensity')
     
-    print(f"  [Debug] Instruction Performance (GIPS): {perf:.2f}")
+    print(f"  [Debug] Instruction Performance (GIPS): {perf:.2f} - Percentage of peak: {perf/peak_gips*100:.2f}%")
     print(f"  [Debug] Instruction Intensity (warp instr/tx): {valore_ai:.2f}")
     
     points_plotted = False
@@ -400,7 +400,7 @@ def shared_roofline_plot(results, specs, plot_dir):
     perf = results.get('Performance GIPS Shared')
     valore_ai = results.get('Shared Intensity')
 
-    print(f"  [Debug] Shared Performance (GIPS): {perf:.2f}")
+    print(f"  [Debug] Shared Performance (GIPS): {perf:.2f} - Percentage of peak: {perf/peak_gips*100:.2f}%")
     print(f"  [Debug] Shared Intensity (warp instr/tx): {valore_ai:.2f}")
     
     if perf > 0 and valore_ai > 0 and not math.isnan(perf) and not math.isnan(valore_ai):
