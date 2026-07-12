@@ -9,7 +9,7 @@ def detect_architecture():
     Detects the architecture of the NVIDIA GPU.
     """
 
-    print("Detecting the architecture")
+    print("\nDetecting the architecture ...")
 
     try:
         # This command query the architecture to know the model of the device
@@ -38,7 +38,7 @@ def build_metrics_string(path_to_metrics, architecture):
     Reads the file METRICS and build the string of metrics that will be used for profiling.
     """
 
-    print("Building the Metrics line")
+    print("\nBuilding the Metrics line ...")
 
     if not os.path.exists(path_to_metrics):
         print(f"Metrics file NOT FOUND: {path_to_metrics}")
@@ -153,16 +153,16 @@ def profiling_ncu(executable, app_args, kernel_name, path_to_metrics, work_dir, 
     
     # Warmup iterations, without collecting the output
     if warmup !=0:
-        print(f"Starting the Warmup with {warmup} iterations...")
+        print(f"\nStarting the Warmup with {warmup} iterations...")
         for _ in range(warmup):
             subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # Launching NCU and catching the results
     try:
-        print(f"Starting the profiling of the kernel {kernel_name} ...")
+        print(f"\nStarting the profiling of the kernel {kernel_name} ...")
         result = subprocess.run(command, capture_output=True, text=True, timeout=1200, cwd=work_dir)
     except Exception as e:
-        print(f"Critical error during the execution: {e}")
+        print(f"\nCritical error during the execution: {e}")
         return None
 
     # Extracting the csv from the text
@@ -190,7 +190,7 @@ def profiling_ncu(executable, app_args, kernel_name, path_to_metrics, work_dir, 
     with open(path_csv, "w") as f:
         f.write(text_csv)
     
-    print(f"The csv has been generated and saved in: {path_csv}")
+    print(f"\nThe csv has been generated and saved in: {path_csv}")
 
     df = pd.read_csv(io.StringIO(text_csv), thousands=',') # Fixing the thousands values
     df.columns = df.columns.str.replace('"', '').str.strip()

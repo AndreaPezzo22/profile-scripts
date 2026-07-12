@@ -178,7 +178,7 @@ def fp32_roofline_plot(results, specs, plot_dir):
 
     perf = results['Performance (GFLOP/s)']
 
-    print(f"  [Debug] FP32 GFLOP/s: {perf:.1f}")
+    print(f"  [Debug] FP32 GFLOP/s: {perf:.1f} - Percentage of peak: {perf/peak*100:.2f}%")
     
     x_keys_dict = {
         'L1': 'L1 Arithmetic Intensity (FLOP/B)',
@@ -256,7 +256,7 @@ def fp64_roofline_plot(results, specs, plot_dir):
         'HBM': 'HBM Arithmetic Intensity (FLOP/B)'
     }
 
-    print(f"  [Debug] FP64 GFLOP/s: {perf:.1f}")
+    print(f"  [Debug] FP64 GFLOP/s: {perf:.1f} - Percentage of peak: {perf/peak*100:.2f}%")
     
     points_plotted = False
     
@@ -332,7 +332,8 @@ def instruction_roofline_plot(results, specs, plot_dir):
     perf = results.get('Performance GIPS')
     valore_ai = results.get('Instruction Intensity')
     
-    print(f"  [Debug] Drawinf Kernel at: X={valore_ai:.2f}, Y={perf:.2f}")
+    print(f"  [Debug] Instruction Performance (GIPS): {perf:.2f}")
+    print(f"  [Debug] Instruction Intensity (warp instr/tx): {valore_ai:.2f}")
     
     points_plotted = False
     if perf > 0 and valore_ai > 0 and not math.isnan(perf) and not math.isnan(valore_ai):

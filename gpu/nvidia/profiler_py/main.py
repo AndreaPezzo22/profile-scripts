@@ -86,14 +86,12 @@ def main():
 
     # If the -d flag is selected, the application's kernel list is returned
     if args.detect:
-        print(f"Looking for the application's kernels: {os.path.basename(args.exe)}...")
         kernel_list = list_kernels(args.exe, app_args, args.workdir, max_launches=50) 
         print(f"The kernel list of the application is: {kernel_list}")
         return
 
     # Otherwise, the normal profilation is executed
     if args.kernel:
-        print(f"\nLaunching the profiling for kernel: '{args.kernel}'...")
         
         # All the collected data get sent to the profiler
         raw_data_df = profiler.profiling_ncu(
