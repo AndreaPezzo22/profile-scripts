@@ -29,14 +29,19 @@ def list_kernels(executable, args, work_dir, max_launches=50):
         for line in result.stdout.splitlines('\n'):
             line = line.strip()
             if line.startswith("Function"):
-                raw_kernel_name = line.replace("Function ", "").split()[0].strip()
+                raw_kernel_name = line.replace("Function ", "").split()[0].strip().rstrip(':')
                 
                 try:
                     demangled_name = subprocess.check_output(["c++filt", raw_kernel_name], text=True).strip()
-                    kernels_base = demangled_name.split('<')[0].split('(')[0].strip()
-                    kernels_puliti.add(kernels_base)
+                    kernels_base = demangled_name.split('<')[0].split('(')[0]
+                    kernels_base = kernels_base.split()[-1]
+                    kernels_base = kernels_base.split('::')[-1]
+
+                    if not kernels_base.startswith('__cuda_'):
+                        kernels_puliti.add(kernels_base)
                 except:
-                    kernels_puliti.add(raw_kernel_name)
+                    if not kernels_base.startswith('__cuda_'):
+                        kernels_puliti.add(raw_kernel_name)
         
         if not kernels_puliti:
             print("No kernels found in the application.")
