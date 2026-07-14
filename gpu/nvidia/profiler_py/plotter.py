@@ -330,16 +330,29 @@ def instruction_roofline_plot(results, specs, plot_dir):
                 color=color, rotation=42, fontsize=14, ha='center', va='bottom')
 
     perf = results.get('Performance GIPS')
-    valore_ai = results.get('Instruction Intensity')
+    valore_ai_L1 = results.get('Instruction Intensity L1')
+    valore_ai_L2 = results.get('Instruction Intensity L2')
+    valore_ai_HBM = results.get('Instruction Intensity HBM')
     
     print(f"  [Debug] Instruction Performance (GIPS): {perf:.2f} - Percentage of peak: {perf/peak_gips*100:.2f}%")
-    print(f"  [Debug] Instruction Intensity (warp instr/tx): {valore_ai:.2f}")
-    
+    print(f"  [Debug] Instruction Intensity L1 (warp instr/tx): {valore_ai_L1:.2f}")
+    print(f"  [Debug] Instruction Intensity L2 (warp instr/tx): {valore_ai_L2:.2f}")
+    print(f"  [Debug] Instruction Intensity HBM (warp instr/tx): {valore_ai_HBM:.2f}")
+
     points_plotted = False
-    if perf > 0 and valore_ai > 0 and not math.isnan(perf) and not math.isnan(valore_ai):
-        ax.scatter(valore_ai, perf, color='red', marker='s', 
-                   s=150, zorder=5, label="Kernel")
-        points_plotted = True
+    
+    # Plot the three memory hierarchy levels as separate points
+    memory_points = [
+        (valore_ai_L1, 'red', 'L1 Cache'),
+        (valore_ai_L2, 'lime', 'L2 Cache'),
+        (valore_ai_HBM, 'blue', 'HBM')
+    ]
+    
+    for i, (ai_value, color, label) in enumerate(memory_points):
+        if perf > 0 and ai_value > 0 and not math.isnan(perf) and not math.isnan(ai_value):
+            ax.scatter(ai_value, perf, color=color, marker='s', 
+                       s=150, zorder=5, label=label)
+            points_plotted = True
 
     ax.grid(True, which="major", ls="-", color="grey", alpha=0.8)
     ax.grid(True, which="minor", ls="--", color="grey", alpha=0.5)

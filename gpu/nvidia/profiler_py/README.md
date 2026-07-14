@@ -65,7 +65,7 @@ The file `environment.yml` contains all the needed dependencies to run the profi
 ### Clone the Profiler
 4. 
    ```bash
-   git clone [https://github.com/elvispolimi/profile-scripts.git](https://github.com/elvispolimi/profile-scripts.git)
+   git clone [https://github.com/AndreaPezzo22/profile-scripts.git](https://github.com/AndreaPezzo22/profile-scripts.git)
    ```
 
 ### Compiler muDock application

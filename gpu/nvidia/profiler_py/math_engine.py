@@ -80,17 +80,29 @@ def instruction_intensity_roofline(df):
     df['GIPS'] = df['smsp__thread_inst_executed.sum'] / (df['elapsed_s'] * 1e9)
 
     # Sums the load and store global transactions
-    df['transactions'] = (df['l1tex__t_sectors_pipe_lsu_mem_global_op_ld.sum'] +
+    df['transactions_l1'] = (df['l1tex__t_sectors_pipe_lsu_mem_global_op_ld.sum'] +
                           df['l1tex__t_sectors_pipe_lsu_mem_global_op_st.sum'])
+    
+    df['transactions_l2'] = (df['lts__t_sectors_op_read.sum'] +
+                          df['lts__t_sectors_op_write.sum'])
+    
+    df['transactions_hbm'] = (df['dram__sectors_read.sum'] +
+                          df['dram__sectors_write.sum'])
+    
+
     
     # Divides the number of instructions by the number of transactions, measuring how many instructions are
     # executed for each memory transaction
-    df['Instruction_Intensity'] = df['smsp__thread_inst_executed.sum'] / df['transactions']
+    df['Instruction_Intensity_L1'] = df['smsp__thread_inst_executed.sum'] / df['transactions_l1']
+    df['Instruction_Intensity_L2'] = df['smsp__thread_inst_executed.sum'] / df['transactions_l2']
+    df['Instruction_Intensity_HBM'] = df['smsp__thread_inst_executed.sum'] / df['transactions_hbm']
 
     avg_result = {
         'Avg time (s)': df['elapsed_s'].mean(),
         'Performance GIPS': df['GIPS'].mean(),
-        'Instruction Intensity': df['Instruction_Intensity'].mean()
+        'Instruction Intensity L1': df['Instruction_Intensity_L1'].mean(),
+        'Instruction Intensity L2': df['Instruction_Intensity_L2'].mean(),
+        'Instruction Intensity HBM': df['Instruction_Intensity_HBM'].mean()
     }
 
     return avg_result
