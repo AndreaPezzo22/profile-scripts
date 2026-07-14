@@ -12,43 +12,38 @@ def list_kernels(executable, args, work_dir, max_launches=50):
     
     # Building the command
     command = [
-        "ncu", 
-        "--csv", 
-        "--metrics", "sm__cycles_elapsed.avg", 
-        "-c", str(max_launches), 
+        "cuobjdump",
+        "-res-usage", 
         executable
-    ] + args
+    ]
     
     try:
         result = subprocess.run(command, capture_output=True, text=True, timeout=60, cwd=work_dir)
-        
-        # We select all the rows of the output and we keep just those referred to the kernels
-        csv_lines = [line for line in result.stdout.split('\n') if line.startswith('"ID"') or (line and line.startswith('"') and "Process ID" not in line)]
-        
-        if len(csv_lines) <= 1:
-            print("No Kernel found")
+        if result.returncode != 0:
+            print(f"Errore nell'esecuzione di cuobjdump:\n{result.stderr}")
             return []
-        
-        # Creates the Data Frame Pandas
-        testo_csv = '\n'.join(csv_lines) # The lines are displaced in a single one
-        df = pd.read_csv(io.StringIO(testo_csv), thousands=',' ) # thousands handles the thousands in the file
-        df.columns = df.columns.str.replace('"', '').str.strip() # Cleans the columns names from "" and additional spaces
-        df = df.drop(0).reset_index(drop=True) # Erases the first row containing the metadata
-        
-        # Extracts pure kernel names without < and ( symbols
-        if 'Kernel Name' in df.columns:
             
-            kernels_grezzi = df['Kernel Name'].dropna().unique()
-            
-            kernels_puliti = set()
-            for k in kernels_grezzi:
-                nome_base = k.split('<')[0].split('(')[0].strip()
-                kernels_puliti.add(nome_base)
-                
-            return sorted(list(kernels_puliti))
-        else:
-            return []
+        kernels_puliti = set()
 
+
+        for line in result.stdout.splitlines('\n'):
+            line = line.strip()
+            if line.startswith("Function"):
+                raw_kernel_name = line.replace("Function ", "").split()[0].strip()
+                
+                try:
+                    demangled_name = subprocess.check_output(["c++filt", raw_kernel_name], text=True).strip()
+                    kernels_base = demangled_name.split('<')[0].split('(')[0].strip()
+                    kernels_puliti.add(kernels_base)
+                except:
+                    kernels_puliti.add(raw_kernel_name)
+        
+        if not kernels_puliti:
+            print("No kernels found in the application.")
+            return []
+        
+        print(f"Found {len(kernels_puliti)} kernels in the application.")
+        return list(kernels_puliti)
     except Exception as e:
         print(f"Error: {e}")
         return []
