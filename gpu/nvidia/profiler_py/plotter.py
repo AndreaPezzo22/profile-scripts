@@ -308,10 +308,10 @@ def instruction_roofline_plot(results, specs, plot_dir):
     ax.set_xscale('log')
     ax.set_yscale('log')
     
-    ax.set_xlim(1e-2, 2e3)
+    ax.set_xlim(1e-2, 1e4)
     ax.set_ylim(1e0, 1e3)
 
-    ax.hlines(y=peak_gips, xmin=1e-2, xmax=2e3, color='black', linewidth=1.2)
+    ax.hlines(y=peak_gips, xmin=1e-2, xmax=1e4, color='black', linewidth=1.2)
     ax.text(1e1, peak_gips * 1.1, f"Theoretical peak: {peak_gips:.1f} warp GIPS", fontsize=16, ha='center')
 
     colors = {'L1': 'red', 'L2': 'lime', 'HBM': 'blue'}
